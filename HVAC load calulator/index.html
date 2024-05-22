@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 900px;
+            max-width: 100%;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .logo-upload {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ddd;
+            background: #f4f4f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .logo-upload input {
+            display: none;
+        }
+
+        .logo-upload img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #ee5566;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .two-column .form-group {
+            width: 48%;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        td input[type="text"],
+        td input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        td input[type="text"]:focus,
+        td input[type="number"]:focus {
+            border-color: #ee5566;
+        }
+
+        .total {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .total label {
+            margin-right: 10px;
+            color: #333;
+        }
+
+        .total input {
+            width: auto;
+            text-align: right;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #ee5566;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #dd4455;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 80px;
+        }
+
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .no-print {
+            display: table-cell;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container" id="billContainer">
+        <div class="header">
+            <h1>Quote</h1>
+            <p><a href="https://zentrades.pro"><br></a></p>
+            <div class="logo-upload" onclick="document.getElementById('logoUpload').click()">
+                <img id="logoPreview" src="" alt="Logo Preview" style="display: none;">
+                <span id="uploadText">Upload Logo</span>
+                <input type="file" id="logoUpload" accept="image/*" onchange="previewLogo(event)">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="companyName">Company Name</label>
+            <input type="text" id="companyName" name="companyName">
+        </div>
+        <div class="two-column">
+            <div class="form-group">
+                <label for="companyAddress">Company Address</label>
+                <input type="text" id="companyAddress" name="companyAddress">
+            </div>
+            <div class="form-group">
+                <label for="companyCity">City, State, ZIP</label>
+                <input type="text" id="companyCity" name="companyCity">
+            </div>
+        </div>
+        <div class="two-column">
+            <div class="form-group">
+                <label for="companyEmail">Email Address</label>
+                <input type="email" id="companyEmail" name="companyEmail">
+            </div>
+            <div class="form-group">
+                <label for="companyPhone">Phone Number</label>
+                <input type="text" id="companyPhone" name="companyPhone" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="companyWebsite">Company Website</label>
+            <input type="text" id="companyWebsite" name="companyWebsite">
+        </div>
+        <div class="two-column">
+            <div class="form-group">
+                <label for="clientCompanyName">Client Company Name</label>
+                <input type="text" id="clientCompanyName" name="clientCompanyName">
+            </div>
+            <div class="form-group">
+                <label for="quoteNumber">Quote Number</label>
+                <input type="text" id="quoteNumber" name="quoteNumber" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="quoteSubject">Quote Subject</label>
+            <input type="text" id="quoteSubject" name="quoteSubject">
+        </div>
+        <div class="form-group full-width">
+            <label for="quoteTerms">Quote Terms</label>
+            <input type="text" id="quoteTerms" name="quoteTerms">
+        </div>
+        <div class="form-group full-width">
+            <label for="dateDue">Date Due</label>
+            <input type="date" id="dateDue" name="dateDue">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Service/Product</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Unit Cost</th>
+                    <th>Total</th>
+                    <th class="no-print">Remove</th>
+                </tr>
+            </thead>
+            <tbody id="quoteTable">
+                <tr>
+                    <td><input type="text" name="serviceProduct"></td>
+                    <td><input type="text" name="description"></td>
+                    <td><input type="number" name="qty" oninput="updateRowTotal(this)"></td>
+                    <td><input type="number" name="unitCost" oninput="updateRowTotal(this)"></td>
+                    <td><input type="number" name="rowTotal" readonly></td>
+                    <td class="no-print"><button type="button" class="remove-button" onclick="removeRow(this)">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="form-group">
+            <button type="button" onclick="addRow()">Add Row</button>
+        </div>
+
+        <div class="total">
+            <label for="subtotal">Subtotal: </label>
+            <input type="number" id="subtotal" name="subtotal" readonly>
+        </div>
+        <div class="total">
+            <label for="discount">Discount (%): </label>
+            <input type="number" id="discount" name="discount" value="0" oninput="calculateTotals()">
+        </div>
+        <div class="total">
+            <label for="taxRate">Tax Rate (%): </label>
+            <input type="number" id="taxRate" name="taxRate" value="5" oninput="calculateTotals()">
+        </div>
+        <div class="total">
+            <label for="taxTotal">Tax Total: </label>
+            <input type="number" id="taxTotal" name="taxTotal" readonly>
+        </div>
+        <div class="total">
+            <label for="quoteTotal">Quote Total: </label>
+            <input type="number" id="quoteTotal" name="quoteTotal" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes:</label>
+            <textarea id="notes" name="notes" rows="4"></textarea>
+        </div>
+
+        <div class="footer">
+            <button type="button" onclick="downloadPDF()">Download Template</button>
+        </div>
+    </div>
+
+    <script>
+        function previewLogo(event) {
+            const logoPreview = document.getElementById('logoPreview');
+            const uploadText = document.getElementById('uploadText');
+            logoPreview.src = URL.createObjectURL(event.target.files[0]);
+            logoPreview.style.display = 'block';
+            uploadText.style.display = 'none';
+            document.querySelector('.logo-upload').style.background = 'none';
+        }
+
+        function addRow() {
+            const table = document.getElementById('quoteTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+            <td><input type="text" name="serviceProduct"></td>
+            <td><input type="text" name="description"></td>
+            <td><input type="number" name="qty" oninput="updateRowTotal(this)"></td>
+            <td><input type="number" name="unitCost" oninput="updateRowTotal(this)"></td>
+            <td><input type="number" name="rowTotal" readonly></td>
+            <td class="no-print"><button type="button" class="remove-button" onclick="removeRow(this)">Remove</button></td>
+        `;
+        }
+
+        function updateRowTotal(input) {
+            const row = input.closest('tr');
+            const qty = row.querySelector('input[name="qty"]').value;
+            const unitCost = row.querySelector('input[name="unitCost"]').value;
+            const total = row.querySelector('input[name="rowTotal"]');
+            total.value = (qty * unitCost).toFixed(2);
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#quoteTable tr');
+            let subtotal = 0;
+            rows.forEach(row => {
+                const rowTotal = row.querySelector('input[name="rowTotal"]').value;
+                subtotal += parseFloat(rowTotal) || 0;
+            });
+            document.getElementById('subtotal').value = subtotal.toFixed(2);
+
+            const discount = document.getElementById('discount').value;
+            const discountedTotal = subtotal - (subtotal * (discount / 100));
+
+            const taxRate = document.getElementById('taxRate').value;
+            const taxTotal = discountedTotal * (taxRate / 100);
+            document.getElementById('taxTotal').value = taxTotal.toFixed(2);
+
+            const quoteTotal = discountedTotal + taxTotal;
+            document.getElementById('quoteTotal').value = quoteTotal.toFixed(2);
+        }
+
+        function removeRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+            calculateTotals();
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const container = document.getElementById('billContainer');
+
+            // Clone the container
+            const clonedContainer = container.cloneNode(true);
+
+            // Remove elements we don't want in the PDF
+            const buttonsToRemove = clonedContainer.querySelectorAll('button');
+            buttonsToRemove.forEach(button => button.remove());
+
+            const removeButtons = clonedContainer.querySelectorAll('.remove-button');
+            removeButtons.forEach(button => button.remove());
+
+            const removeColumns = clonedContainer.querySelectorAll('.no-print');
+            removeColumns.forEach(col => col.remove());
+
+            // Convert input fields to plain text in the cloned container
+            const tableInputs = clonedContainer.querySelectorAll('#quoteTable input[type="text"], #quoteTable input[type="number"]');
+            tableInputs.forEach(input => {
+                const span = document.createElement('span');
+                span.textContent = input.value;
+                span.style.border = input.style.border;
+                span.style.padding = input.style.padding;
+                span.style.width = input.style.width;
+                span.style.boxSizing = input.style.boxSizing;
+                input.parentNode.replaceChild(span, input);
+            });
+
+            const containerDiv = document.createElement('div');
+            containerDiv.style.position = 'absolute';
+            containerDiv.style.left = '-9999px';
+            containerDiv.appendChild(clonedContainer);
+            document.body.appendChild(containerDiv);
+
+            await html2canvas(clonedContainer, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+                // Add watermark logo and text
+                const watermarkImage = '/images/download.jpeg'; // replace with your logo URL or base64
+                const watermarkText = 'provided By'; // replace with your desired text
+                const watermarkLink = 'https://zentrades.pro'; // replace with your desired URL
+                const linkWidth = 30; // width of the clickable area
+                const linkHeight = 30; // height of the clickable area
+                const linkX = 10; // x position of the clickable area
+                const linkY = doc.internal.pageSize.getHeight() - 20; // y position of the clickable area
+
+                // Add image and text
+                doc.addImage(watermarkImage, 'PNG', 10, doc.internal.pageSize.getHeight() - 20, 15, 15);
+                doc.text(watermarkText, 28, doc.internal.pageSize.getHeight() - 10);
+
+                // Add clickable link
+                doc.link(linkX, linkY, linkWidth, linkHeight, { url: watermarkLink });
+
+                doc.save('quote.pdf');
+
+                document.body.removeChild(containerDiv);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
